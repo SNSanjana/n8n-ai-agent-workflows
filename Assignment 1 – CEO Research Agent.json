@@ -1,0 +1,274 @@
+{
+  "name": "Assignment 1 – CEO Research Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6cc009a3-735d-42eb-a37f-d59ed73c6033",
+              "name": "name",
+              "value": "=Sam Altman",
+              "type": "string"
+            },
+            {
+              "id": "0901e3ec-080c-4e84-a2fc-ba7c80a74b12",
+              "name": "copany",
+              "value": "=OpenAI",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -32,
+        -96
+      ],
+      "id": "e05db875-14dc-4eb7-90dc-237fc031c5f9",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        272,
+        64
+      ],
+      "id": "6456c739-7f49-4cde-b301-d168cc06d433",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9OhU7d8WvcYSellT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Generate 5 targeted search queries to research this person.\n{{ $json.name }}\nTarget: {{ $json.name }}\nCompany:{{ $json.copany }}\n\nCover: biography, education, career history, company vision, recent news.\n\nReturn ONLY a numbered list like this:\n1. query one\n2. query two\n3. query three\n4. query four\n5. query five",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        -112
+      ],
+      "id": "ed277472-7b5f-4b09-baba-7c91d9c1cca2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "url": "=https://html.duckduckgo.com/html/?q={{ $json.text }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "=User-Agent",
+              "value": "Mozilla/5.0"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        544,
+        -128
+      ],
+      "id": "96ab6d45-366d-47ba-a201-893a5c621cdd",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a research analyst. Read these search results and extract all important facts about{{ $('Edit Fields').item.json.name }}  .\n\nSearch results:\n{{ $json.data }}\n\nExtract facts and organize them into these categories:\n- Background & Education\n- Career History\n- Company Vision\n- Key Achievements\n- Recent News\n- Notable Quotes\n\nWrite each fact as a clear bullet point under each category.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        880,
+        -160
+      ],
+      "id": "62fd1ac3-6724-4f9c-9f46-1707bf0617e0",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        928,
+        96
+      ],
+      "id": "547e0146-f247-48d9-a27b-a17d8bdbe63c",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9OhU7d8WvcYSellT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Format your response as clean plain text with clear headings using == signs. Do not use markdown symbols like # or *.\nYou are a senior research analyst. Using the facts below, write a comprehensive intelligence profile report.\n\nFacts gathered:\n{{ $json.text }}\n\n\nWrite the report in this exact structure:\n\n# Intelligence Profile: {{ $('Edit Fields').first().json.target }}\nCompany: {{ $('Edit Fields').item.json.comapny }}\n\n## 1. Executive Summary\n(2-3 sentences about who this person is)\n\n## 2. Background & Education\n## 3. Career Journey\n## 4. Company Vision & Strategy\n## 5. Leadership Style & Personality\n## 6. Notable Achievements\n## 7. Key Quotes & Philosophy\n## 8. Recent News & Activity\n\nWrite each section in detail. Be professional and thorough. give in a structured format",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1216,
+        -176
+      ],
+      "id": "76307538-9f3b-4ddc-b3fc-c8454da046b1",
+      "name": "Basic LLM Chain2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        96
+      ],
+      "id": "edc4d211-e811-48ef-bf01-1b744efd6072",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9OhU7d8WvcYSellT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -256,
+        -64
+      ],
+      "id": "c296aff3-cf09-4d7b-863c-e3d69bd45eba",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain2",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "28a3b5ba-fc7d-4839-8537-61bb9a8be4de",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b390b4d18005a124ed7cff4690745f0f008b1c6f9214fd9f8f8371c9612b7b23"
+  },
+  "id": "3CiCimzix2Uvy6zh",
+  "tags": []
+}

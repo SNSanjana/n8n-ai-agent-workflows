@@ -1,0 +1,139 @@
+{
+  "name": "Assignment 2 – AI Dev Assistant",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -32
+      ],
+      "id": "345d1906-5034-423b-af2e-7f949fc18c3a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e74b024b-fbef-4795-856f-95ed9a9aec13",
+              "name": "mode",
+              "value": "debug",
+              "type": "string"
+            },
+            {
+              "id": "08ab3596-0fbe-4984-b63a-dde40753b175",
+              "name": "filename",
+              "value": "sample_app.py",
+              "type": "string"
+            },
+            {
+              "id": "ad8cd10a-0bcd-4bbc-9033-8a82794ca400",
+              "name": "code",
+              "value": "import json  class UserManager:     def __init__(self, db_path):         self.db_path = db_path         self.users = {}         self.load_users()          def load_users(self):         with open(self.db_path, 'r') as f:             self.users = json.load(f)          def add_user(self, username, password):         self.users[username] = {             'password': password,             'created': 'today'         }         self.save_users()          def authenticate(self, username, password):         if username not in self.users:             return False         return self.users[username]['password'] == password          def delete_user(self, username):         del self.users[username]         self.save_users()          def save_users(self):         with open(self.db_path, 'w') as f:             json.dump(self.users, f)  def calculate_stats(user_list):     total = len(user_list)     admins = sum(1 for u in user_list if u.get('role') == 'admin')     ratio = admins / total     return {'total': total, 'admins': admins, 'ratio': ratio}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -256,
+        -48
+      ],
+      "id": "a4ed9da5-addb-4dfb-a8e7-7f46613cc3b1",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert code reviewer. Analyze this Python code and find all bugs.\n\nFilename: {{ $json.filename }}\n\nCode:\n{{ $json.code }}\n\nWrite your response in this exact clean format using plain text only, no markdown symbols like # or * or backticks:\n\nBUG REPORT: sample_app.py\n==========================\n\nSUMMARY\nTotal bugs found: X\nCritical: X | High: X | Medium: X | Low: X\n\n---\n\nBUG 1 - File Not Found Error\nSeverity: CRITICAL\nLocation: load_users function\nProblem: When app runs first time, file does not exist so it crashes immediately\nFix: Add a check using os.path.exists() before opening the file\n\nCorrected code:\ndef load_users(self):\n    if not os.path.exists(self.db_path):\n        self.users = {}\n        return\n    with open(self.db_path, 'r') as f:\n        self.users = json.load(f)\n\n---\n\nBUG 2 - [name]\nSeverity: HIGH\nLocation: [function name]\nProblem: [simple explanation]\nFix: [how to fix it]\n\nCorrected code:\n[fixed code here]\n\n---\n\n(repeat same format for every bug found)\n\n---\n\nCOMPLETE FIXED VERSION\n[paste the entire corrected file here]\n\n==========================\nEND OF REPORT",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -48,
+        -48
+      ],
+      "id": "32e20004-eac6-4c5c-aa20-0c325ebb6307",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        160
+      ],
+      "id": "df19debd-0771-4b41-bf78-d92404bea8cb",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "9OhU7d8WvcYSellT",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "26f510e1-712b-4de3-b061-400c99be89ed",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b390b4d18005a124ed7cff4690745f0f008b1c6f9214fd9f8f8371c9612b7b23"
+  },
+  "id": "MaoTl6TdzmbcTN96",
+  "tags": []
+}
